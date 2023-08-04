@@ -16,4 +16,9 @@ on the 'console' you can use:
 ^T : toggle trace of the input chars
 
 The basic version has many extra commands to interact with the VDU/SOUND interface. See the docs
-Also have a look at the demo basic-programs
+Also have a look at the demo basic-programs.
+
+For a quick setup: install the UF2-file on the NEO6502 by pressing the little button on the board. Hold it during powerup and release.
+The NEO6502 will present itself as a USB-device on your PC. Copy the UF2-file to it.
+That's all
+
