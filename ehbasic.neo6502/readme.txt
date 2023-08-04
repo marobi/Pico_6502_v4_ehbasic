@@ -13,14 +13,4 @@
 
  For commercial use please contact me,  Lee Davison, at leeedavison@googlemail.com
  for conditions.
-
- For more information on EhBASIC, other versions of EhBASIC and other projects
- please visit my site at ..
-
-	 http://members.multimania.co.uk/leeedavison/index.html
-
-
- P.S. c't magazin, henceforth refered to as "those thieving german bastards", are
- prohibited from using this or any version of EhBASIC for any of their projects
- or products. The excuse "we don't charge people for it" doesn't wash, it adds
- value to your product so you owe me.
+P.S. Lee passed away many years a go.
