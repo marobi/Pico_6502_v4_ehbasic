@@ -23,3 +23,4 @@ For a quick setup: install the UF2-file on the NEO6502 by pressing the little bu
 The NEO6502 will present itself as a USB-device on your PC. Copy the UF2-file to it.
 That's all
 
+BTW no real USB-keyboard yet. You need to use a terminal emulator on your system, like PuTTY, TeraTerm or something.
