@@ -30,8 +30,8 @@
 #define VDU_DMOD  0xD02B  // Draw mode - RECT :: fill-mode
 #define VDU_MOD   0xD02C  // VDU mode
 #define VDU_PAL   0xD02D  // PAL index
-#define VDU_BCOL  0xD02E  // BG color -- TBI
-#define VDU_COL   0xD02F  // FG color
+#define VDU_COL   0xD02E  // FG color low
+#define VDU_BCOL  0xD02F  // FG color high/BG color -- TBI
 
 
 // VDU commands -- TODO: reorg

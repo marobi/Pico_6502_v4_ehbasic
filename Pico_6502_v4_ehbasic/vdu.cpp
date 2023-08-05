@@ -5,6 +5,7 @@
 
 #include "memory.h"
 #include "vdu.h"
+#include "palette.h"
 
 boolean        statusCursor = true;
 uint8_t        currentColor;
@@ -188,6 +189,11 @@ void setVDU(uint8_t vCmd) {
     hasDisplayUpdate++;
     break;
 
+  case CMD_PAL:
+    display.setColor(mem[VDU_PAL], ((uint16_t)mem[VDU_BCOL] * 256) + mem[VDU_COL]);
+    display.swap(false, true);
+    break;
+
   case CMD_VDU: //  VDU control
     switch (mem[VDU_MOD] & 0x01) {
     case 1:
@@ -314,6 +320,17 @@ void swapDisplay() {
 /// 
 /// </summary>
 void resetDisplay() {
+  uint16_t colr, r, g, b;
+  // load palette, convert from RGB888 to RGB565
+  for (uint8_t c = 0; c <= 254; c++) {
+    r = default_palette[c] >> 16;
+    g = (default_palette[c] & 0x00FF00) >> 8;
+    b = default_palette[c] & 0x0000FF;
+    colr = ((r & 0b11111000) << 8) + ((g & 0b11111100) << 3) + (b >> 3);
+//    Serial.printf("PAL: %d %04x\n", c, colr);
+    display.setColor(c,colr);
+  }
+#if 0
   display.setColor(0, 0x0000);   // Black
   display.setColor(1, 0XF800);   // Red
   display.setColor(2, 0x07e0);   // Green
@@ -321,21 +338,24 @@ void resetDisplay() {
   display.setColor(4, 0x001f);   // Blue
   display.setColor(5, 0xFA80);   // Orange
   display.setColor(6, 0xF8F9);   // Magenta
+#endif
   display.setColor(255, 0xFFFF); // Last palette entry = White
+  Serial.println("Default palette loaded");
+
   // Clear back framebuffer
   display.fillScreen(0);
   display.setFont();             // Use default font
   display.setCursor(0, 0);       // Initial cursor position
   display.setTextSize(1);        // Default size
   display.setTextWrap(false);
-  display.swap(false, true);     // Duplicate same palette into front & back buffers
+  display.swap(true, true);     // Duplicate same palette into front & back buffers
 
   mem[VDU_CMD] = 0x00;
 
   statusCursor = true;
   autoUpdate = true;
   autoScroll = true;
-  setColor(2);
+  setColor(DEFAULT_TEXT_COLOR);
   clearDisplay();
 }
 
@@ -355,29 +375,19 @@ void initDisplay() {
 /// </summary>
 void helloDisplay() {
   // and we have lift off
-  setColor(4); // BLUE
-#if 0
-  display.println("   NN  NN EEEEE  OOOO   6666  55555   0000   222");
-  display.println("   NN  NN EE    OO  OO 66     55     00  00 22 22");
-  display.println("   NNN NN EE    OO  OO 66     55     00  00    22");
-  display.println("   NN NNN EEEE  OO  OO 66666  55555  00  00  222");
-  display.println("   NN  NN EE    OO  OO 66  O6     55 00  00 22");
-  display.println("   NN  NN EE    OO  OO 66  O6     55 00  00 22");
-  display.println("   NN  NN EE    OO  OO 66  O6 55  55 00  00 22");
-  display.println("   NN  NN EEEEE  OOOO   6666   5555   0000  22222");
-#endif
+  setColor(12); // BLUE
 #if 1
-  display.println("      N   N EEEE  OOO   666  5555   000   22");
-  display.println("      N   N E    O   O 6     5     0   0 2  2");
-  display.println("      NN  N E    O   O 6     5     0   0    2");
-  display.println("      N N N EEE  O   O 6666  5555  0   0  22");
-  display.println("      N  NN E    O   O 6   6     5 0   0 2");
-  display.println("      N   N E    O   O 6   6     5 0   0 2");
-  display.println("      N   N E    O   O 6   6 5   5 0   0 2");
-  display.println("      N   N EEEE  OOO   666   555   000  2222");
+  display.println("      N   N           666  5555   000   22");
+  display.println("      N   N          6     5     0   0 2  2");
+  display.println("      NN  N          6     5     0   0    2");
+  display.println("      N N N EEE  OO  6666  5555  0   0  22");
+  display.println("      N  NN E   O  O 6   6     5 0   0 2");
+  display.println("      N   N EE  O  O 6   6     5 0   0 2");
+  display.println("      N   N E   O  O 6   6 5   5 0   0 2");
+  display.println("      N   N EEE  OO   666   555   000  2222");
 #endif
 //  display.print("NEO6502");
   setColor(255); // WHITE
   display.println("\n             memulator v0.04ehbp1");
-  setColor(2); // GREEN
+  setColor(DEFAULT_TEXT_COLOR); // GREEN
 }

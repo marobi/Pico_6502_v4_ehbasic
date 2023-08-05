@@ -65,5 +65,8 @@
     <ClInclude Include="vdu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="palette.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

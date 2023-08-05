@@ -101,6 +101,7 @@
     <ClInclude Include="ehbasic.h" />
     <ClInclude Include="memory.h" />
     <ClInclude Include="mos65C02.h" />
+    <ClInclude Include="palette.h" />
     <ClInclude Include="pins.h" />
     <ClInclude Include="roms.h" />
     <ClInclude Include="sound.h" />
