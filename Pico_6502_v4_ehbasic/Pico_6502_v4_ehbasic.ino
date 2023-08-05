@@ -131,7 +131,7 @@ void loop() {
     scanChar();
     scanVDU();
 
-    j = 350;
+    j = 750;
   }
 
   if (autoUpdate) {
