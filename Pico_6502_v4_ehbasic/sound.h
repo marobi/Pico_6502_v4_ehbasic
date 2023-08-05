@@ -15,8 +15,7 @@
 #define SND_STOP  0x02  // NOPLAY
 
 void initSound();
-void setSound(uint8_t);
-uint8_t SoundQueueIsEmpty();
+void scanSound();
 
 #endif
 

@@ -12,7 +12,7 @@
 
 // ROM image:
 typedef struct _sROMImage {
-  char     name[16];
+  char     name[32];
   uint16_t startAddress;
   uint16_t romsize;
   const uint8_t  *image;
@@ -23,8 +23,8 @@ typedef struct _sROMImage {
 ///  the ROM images to load
 /// </summary>
 sROMImage ROMs[] = {
-  { "Vectors",       0xFFFA,        0X0006,       vectors_bin },
-  { "Ehbasic v2.22", EHBASIC_START, EHBASIC_SIZE, ehbasic_bin },
+  { "Ehbasic v2.22p5a", EHBASIC_START, EHBASIC_SIZE, ehbasic_bin },
+  { "Vectors",          0xFFFA,        0X0006,       vectors_bin },
   { "", 0x0000, 0x0000 }
 };
 
@@ -48,9 +48,10 @@ uint8_t* readROM(String vROMname) {
 /// <returns></returns>
 bool loadROM(const uint8_t *vROM, uint16_t startAddress, uint16_t romSize) {
   // copy ROM in memory space
-  for (uint16_t i = 0; i < romSize; i++) {
-    mem[i + startAddress] = vROM[i];
-  }
+  memcpy(&mem[startAddress], vROM, romSize);
+//  for (uint16_t i = 0; i < romSize; i++) {
+//    mem[i + startAddress] = vROM[i];
+//  }
 
   return true;
 }

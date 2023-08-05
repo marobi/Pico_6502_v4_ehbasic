@@ -54,10 +54,10 @@ extern boolean autoUpdate;
 extern uint32_t hasDisplayUpdate;
 extern boolean  traceOn;
 
-void setColor(uint8_t);
-void displayWrite(uint8_t);
-void writeChar(uint8_t);
-void setVDU(uint8_t);
+
+void scanChar();
+void scanVDU();
+
 void resetDisplay();
 void initDisplay();
 void helloDisplay();

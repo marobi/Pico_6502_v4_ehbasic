@@ -3,8 +3,6 @@
 // 
 #include "memory.h"
 #include "roms.h"
-#include "vdu.h"
-#include "sound.h"
 
 /// <summary>
 /// 64k RAM
@@ -31,48 +29,15 @@ void initMemory() {
 /// <summary>
 /// read a byte from memory
 /// </summary>
-/// <param name=address"</param>
-/// <param name=data"</param>
-/// <returns></returns>
 void readmemory() {
-  switch (address) {
-  case SND_STAT:
-    data = SoundQueueIsEmpty();
-    break;
-
-  default:
-    data = mem[address];
-    break;
-  }
+  data = mem[address];
 }
 
 /// <summary>
 /// store a byte into memory
 /// </summary>
-/// <param name="address"></param>
-/// <param name="data"></param>
 void writememory() {
-  if (address == DSP) {
-    // DSP register
-    writeChar(data & 0x7F);
-    mem[DSP] = 0x00;
-  }
-  else if (0xD020 <= address && address < 0xD040) { // VDU/SOUND controller
-    switch (address) {
-    case VDU_CMD: // VDU CMD
-      setVDU(data);
-      data = 0x00;
-      break;
-
-    case SND_CMD: // SOUND CMD
-      setSound(data);
-      data = 0x00;
-      break;
-    }
-
-    mem[address] = data;
-  }
-  else if ((0x8000 <= address && address <= 0xCFFF) || (0xE000 <= address && address <= 0xFFF9)) { // exclude writing ROM
+  if ((0xA000 <= address && address <= 0xCFFF) || (0xE000 <= address && address <= 0xFFF9)) { // exclude writing ROM
     Serial.printf("access violation [%04X]\n", address);
   }
   else

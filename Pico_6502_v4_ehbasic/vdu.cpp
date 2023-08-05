@@ -78,6 +78,7 @@ void removeCursor() {
 /// <summary>
 /// 
 /// </summary>
+inline __attribute__((always_inline))
 void clearDisplay() {
   display.fillScreen(0);
   display.setCursor(0, 0);
@@ -88,6 +89,7 @@ void clearDisplay() {
 /// performa a action on the display
 /// </summary>
 /// <param name="vCmd"></param>
+inline __attribute__((always_inline))
 void setVDU(uint8_t vCmd) {
   int16_t cx, cy, ex, ey;
   uint16_t cw, ch, cr;
@@ -213,6 +215,18 @@ void setVDU(uint8_t vCmd) {
 /// <summary>
 /// 
 /// </summary>
+void scanVDU() {
+  uint8_t cmd = mem[VDU_CMD];
+
+  if (cmd != 0x00) {
+    setVDU(cmd);
+    mem[VDU_CMD] = 0x00;
+  }
+}
+
+/// <summary>
+/// 
+/// </summary>
 /// <param name="c"></param>
 /// <returns></returns>
 inline __attribute__((always_inline))
@@ -268,16 +282,22 @@ void displayWrite(uint8_t c) {
 }
 
 /// <summary>
-///  write a char to output DVI output
+///  scan for a char to output DVI output
 /// </summary>
 /// <param name="vChar"></param>
-void writeChar(uint8_t vChar) {
-  if (traceOn) {
-    Serial.printf("OUT [%02X]\n", vChar);
-  }
+void scanChar() {
+  uint8_t ch = mem[DSP];
 
-  displayWrite(vChar);
-  hasDisplayUpdate++;
+  if (ch != 0x00) {
+    if (traceOn) {
+      Serial.printf("OUT [%02X]\n", ch);
+    }
+
+    displayWrite(ch);
+    hasDisplayUpdate++;
+
+    mem[DSP] = 0x00;
+  }
 }
 
 /// <summary>
@@ -336,8 +356,28 @@ void initDisplay() {
 void helloDisplay() {
   // and we have lift off
   setColor(4); // BLUE
-  display.print("NEO6502");
+#if 0
+  display.println("   NN  NN EEEEE  OOOO   6666  55555   0000   222");
+  display.println("   NN  NN EE    OO  OO 66     55     00  00 22 22");
+  display.println("   NNN NN EE    OO  OO 66     55     00  00    22");
+  display.println("   NN NNN EEEE  OO  OO 66666  55555  00  00  222");
+  display.println("   NN  NN EE    OO  OO 66  O6     55 00  00 22");
+  display.println("   NN  NN EE    OO  OO 66  O6     55 00  00 22");
+  display.println("   NN  NN EE    OO  OO 66  O6 55  55 00  00 22");
+  display.println("   NN  NN EEEEE  OOOO   6666   5555   0000  22222");
+#endif
+#if 1
+  display.println("      N   N EEEE  OOO   666  5555   000   22");
+  display.println("      N   N E    O   O 6     5     0   0 2  2");
+  display.println("      NN  N E    O   O 6     5     0   0    2");
+  display.println("      N N N EEE  O   O 6666  5555  0   0  22");
+  display.println("      N  NN E    O   O 6   6     5 0   0 2");
+  display.println("      N   N E    O   O 6   6     5 0   0 2");
+  display.println("      N   N E    O   O 6   6 5   5 0   0 2");
+  display.println("      N   N EEEE  OOO   666   555   000  2222");
+#endif
+//  display.print("NEO6502");
   setColor(255); // WHITE
-  display.println(" memulator v0.04ehb");
+  display.println("\n             memulator v0.04ehbp1");
   setColor(2); // GREEN
 }

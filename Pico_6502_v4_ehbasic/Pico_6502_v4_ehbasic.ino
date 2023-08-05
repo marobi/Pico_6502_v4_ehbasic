@@ -33,7 +33,7 @@ void setup() {
   //  while (!Serial);
 
   sleep_ms(2500);
-  Serial.println("NEO6502 memulator v0.04ehb");
+  Serial.println("NEO6502 memulator v0.04ehbp1");
 
   Serial.printf("Starting ...\n");
 
@@ -99,7 +99,6 @@ void serialEvent1()
 
     default:
       if (mem[KBD] == 0x00) {             // read serial byte only if we can
- //       cli();                          // stop interrupts while changing 6821 guts.
 #ifdef UCASE_ONLY
         byte ch = toupper(Serial.read()); // apple1 expects upper case
         mem[KBD] = ch | 0x80;             // apple1 expects bit 7 set for incoming characters.
@@ -107,7 +106,6 @@ void serialEvent1()
         byte ch = Serial.read();
         mem[KBD] = ch;
 #endif
-        //        sei();
         if (traceOn) {
           Serial.printf("IN: [%02X]\n", ch);
         }
@@ -129,8 +127,11 @@ void loop() {
 
   if (j-- == 0) {
     serialEvent1();
+    scanSound();
+    scanChar();
+    scanVDU();
 
-    j = 250;
+    j = 350;
   }
 
   if (autoUpdate) {
@@ -144,7 +145,7 @@ void loop() {
     }
   }
 
-  // only do stas when in loggin mode
+  // only do stats when in logging mode
   if (logState) {
     if (i-- == 0) {
       if ((millis() - lastClockTS) >= 5000UL) {

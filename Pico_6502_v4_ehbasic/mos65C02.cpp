@@ -2,6 +2,20 @@
 // Author: Rien Matthijsse
 // 
 #include "mos65C02.h"
+#include "pins.h"
+#include "memory.h"
+
+#define RESET_LOW   false
+#define RESET_HIGH  true
+
+#define ENABLE_LOW  false
+#define ENABLE_HIGH true
+
+#define CLOCK_LOW   false
+#define CLOCK_HIGH  true
+
+#define RW_READ     true
+#define RW_WRITE    false
 
 #define DELAY_FACTOR_SHORT() asm volatile("nop\nnop\nnop\nnop\n");
 //#define DELAY_FACTOR_LONG()  asm volatile("nop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\n");
@@ -172,9 +186,6 @@ void tick6502(uint32_t delay)
     setDir(INPUT);
 
     DELAY_FACTOR_LONG();
-//#if CPU_DEBUG
-//    delayMicroseconds(delay);
-//#endif
 
     //------------------------------------------------------------------------------------
     setClock(CLOCK_HIGH);
@@ -186,14 +197,22 @@ void tick6502(uint32_t delay)
     // do RW action
     switch (getRW()) {
     case RW_READ:
+#ifdef USE_DIRECT
+      data = mem[address];
+#else
       readmemory(); // data = @address
+#endif
       putData(data);
 //      Serial.printf("R %04X %02X\n", address, data);
       break;
 
     case RW_WRITE:
       data = getData();
+#ifdef USE_DIRECT
+      mem[address] = data;
+#else
       writememory(); // @address = data
+#endif
 //      Serial.printf("W %04X %02X\n", address, data);
       break;
     }
@@ -208,41 +227,3 @@ void tick6502(uint32_t delay)
       }
     }
 }
-
-#ifdef TEST_MODE
-/// <summary>
-/// 
-/// </summary>
-void test6502() {
-  uint32_t dly = 50;
-
-  Serial.println("begin");
-
-  Serial.println("RESET");
-  setReset(RESET_LOW);
-  delay(dly);
-  setReset(RESET_HIGH);
-
-  Serial.println("ENABLE 1");
-  setEnable(en_A0_7);
-  delay(dly);
-//  setEnable(en_NONE);
-
-  Serial.println("ENABLE 2");
-  setEnable(en_A8_15);
-  delay(dly);
-//  setEnable(en_NONE);
-
-  Serial.println("ENABLE 3");
-  setEnable(en_D0_7);
-  delay(dly);
-//  setEnable(en_NONE);
-
-  Serial.println("CLOCK");
-  setClock(CLOCK_LOW);
-  delay(dly);
-  setClock(CLOCK_HIGH);
-
-  Serial.println("end");
-}
-#endif

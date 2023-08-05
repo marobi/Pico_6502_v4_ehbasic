@@ -138,6 +138,7 @@ static sTone tones[] = {
 /// </summary>
 /// <param name="vTone"></param>
 /// <returns></returns>
+inline __attribute__((always_inline))
 uint16_t getFreq(String vTone) {
   uint8_t t = 0;
 
@@ -175,10 +176,14 @@ bool TimerHandler(struct repeating_timer* t)
       PWM_Instance->setPWM(uP_BUZZ, 440, 0);
 
     ITimer0.setInterval(6000000L * n.Duration / gBPM * gNPS, TimerHandler);
+
+    mem[SND_STAT] = 0;
   }
   else {
     PWM_Instance->setPWM(uP_BUZZ, 440, 0);
     ITimer0.setInterval(1000 * 1000, TimerHandler);
+
+    mem[SND_STAT] = 1;
   }
 
   return true;
@@ -188,6 +193,7 @@ bool TimerHandler(struct repeating_timer* t)
 /// 
 /// </summary>
 /// <returns></returns>
+inline __attribute__((always_inline))
 uint8_t SoundQueueIsEmpty() {
   return sound_queue.isEmpty();
 }
@@ -196,6 +202,7 @@ uint8_t SoundQueueIsEmpty() {
 /// 
 /// </summary>
 /// <returns></returns>
+inline __attribute__((always_inline))
 uint8_t SoundQueueIsFull() {
   return sound_queue.isFull();
 }
@@ -206,6 +213,7 @@ uint8_t SoundQueueIsFull() {
 /// <param name="vTone"></param>
 /// <param name="vDuration"></param>
 /// <returns></returns>
+inline __attribute__((always_inline))
 boolean pushNote(String vNote, uint8_t vDuration) {
   sNote n;
 
@@ -219,6 +227,7 @@ boolean pushNote(String vNote, uint8_t vDuration) {
 /// <summary>
 /// 
 /// </summary>
+inline __attribute__((always_inline))
 void SoundReset() {
   //  Serial.println("SOUND: reset");
   sound_queue.clean();
@@ -227,6 +236,7 @@ void SoundReset() {
 /// <summary>
 /// 
 /// </summary>
+inline __attribute__((always_inline))
 void setSound(uint8_t vCmd) {
 //  Serial.printf("SOUND: %02d\n", vCmd);
 
@@ -238,6 +248,18 @@ void setSound(uint8_t vCmd) {
   case SND_STOP:
     sound_queue.clean();
     break;
+  }
+}
+
+/// <summary>
+/// 
+/// </summary>
+void scanSound() {
+  uint8_t cmd = mem[SND_CMD];
+
+  if (cmd != 0x00) {
+    setSound(cmd);
+    mem[SND_CMD] = 0x00;
   }
 }
 
