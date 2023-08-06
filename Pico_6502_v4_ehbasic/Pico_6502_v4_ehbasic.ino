@@ -122,40 +122,42 @@ void serialEvent1()
 void loop() {
   static uint32_t i, j, f = 1;
 
-  tick6502(0UL);
-  clockCount++;
+  for (;;) {
+    tick6502(0UL);
+    clockCount++;
 
-  if (j-- == 0) {
-    serialEvent1();
-    scanSound();
-    scanChar();
-    scanVDU();
+    if (j-- == 0) {
+      serialEvent1();
+      scanSound();
+      scanChar();
+      scanVDU();
 
-    j = 750;
-  }
-
-  if (autoUpdate) {
-    if (f-- == 0) {
-      if ((millis() - frameClockTS) >= FRAMETIME) {
-        swapDisplay();
-        frameClockTS = millis();
-      }
-
-      f = 7500;
+      j = 750;
     }
-  }
 
-  // only do stats when in logging mode
-  if (logState) {
-    if (i-- == 0) {
-      if ((millis() - lastClockTS) >= 5000UL) {
-        Serial.printf("kHz = %0.1f\n", clockCount / 5000.0);
+    if (autoUpdate) {
+      if (f-- == 0) {
+        if ((millis() - frameClockTS) >= FRAMETIME) {
+          swapDisplay();
+          frameClockTS = millis();
+        }
 
-        clockCount = 0UL;
-        lastClockTS = millis();
+        f = 7500;
       }
+    }
 
-      i = 20000;
+    // only do stats when in logging mode
+    if (logState) {
+      if (i-- == 0) {
+        if ((millis() - lastClockTS) >= 5000UL) {
+          Serial.printf("kHz = %0.1f\n", clockCount / 5000.0);
+
+          clockCount = 0UL;
+          lastClockTS = millis();
+        }
+
+        i = 20000;
+      }
     }
   }
 }
