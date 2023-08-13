@@ -6,6 +6,7 @@
 #include "memory.h"
 #include "vdu.h"
 #include "palette.h"
+#include "sprite.h"
 
 boolean        statusCursor = true;
 uint8_t        currentColor;
@@ -28,22 +29,51 @@ static const struct dvi_serialiser_cfg pico_neo6502_cfg = {
 // Here's how an 320x240 256 colors graphics display is declared.
 DVIGFX8 display(DVI_RES_320x240p60, true, pico_neo6502_cfg);
 
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="color_id"></param>
+/// <returns></returns>
+uint16_t getColor(const uint8_t color_id) {
+  return display.getColor(color_id);
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="x"></param>
+/// <param name="y"></param>
+/// <returns></returns>
+uint8_t getPixel(const uint16_t x, const uint16_t y) {
+  return display.getPixel(x, y);
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="x"></param>
+/// <param name="y"></param>
+/// <param name="color"></param>
+void drawPixel(const uint16_t x, const uint16_t y, const uint16_t color) {
+  display.drawPixel(x, y, color);
+}
+
 /// <summary>
 /// control visibility of cursor
 /// </summary>
 /// <param name="vSet"></param>
 inline __attribute__((always_inline))
-void showCursor(boolean vSet) {
+void showCursor(const boolean vSet) {
   statusCursor = vSet;
 }
-
 
 /// <summary>
 /// set current text color (by pallette index)
 /// </summary>
 /// <param name="vColor"></param>
 inline __attribute__((always_inline))
-void setColor(uint8_t vColor) {
+void setColor(const uint8_t vColor) {
   currentColor = vColor;
   display.setTextColor(vColor);
 }
@@ -91,7 +121,7 @@ void clearDisplay() {
 /// </summary>
 /// <param name="vCmd"></param>
 inline __attribute__((always_inline))
-void setVDU(uint8_t vCmd) {
+void setVDU(const uint8_t vCmd) {
   int16_t cx, cy, ex, ey;
   uint16_t cw, ch, cr;
 
@@ -104,14 +134,11 @@ void setVDU(uint8_t vCmd) {
     cx = (((uint16_t)mem[VDU_XH] * 256) + mem[VDU_XL]) % WIDTH;
     cy = (((uint16_t)mem[VDU_YH] * 256) + mem[VDU_YL]) % HEIGHT;
     display.setCursor(cx, cy);
-    //           Serial.printf("GCURSOR: %04d %04d\n", cx, cy);
     hasDisplayUpdate++;
-   break;
- 
+    break;
+
   case CMD_COLOR: // set color
     setColor(mem[VDU_COL]);
-    //    Serial.printf("COLOR %02d\n", currentColor);
-        // bg color ignored
     break;
 
   case CMD_PIXEL: // set pixel (ignore screen mode)
@@ -157,7 +184,7 @@ void setVDU(uint8_t vCmd) {
     cy = (((uint16_t)mem[VDU_YH] * 256) + mem[VDU_YL]) % HEIGHT;
     cr = (((uint16_t)mem[VDU_WH] * 256) + mem[VDU_WL]) % WIDTH;
 
-//    Serial.printf("CIRC %04x %04x %04x\n", cx, cy, cr);
+    //    Serial.printf("CIRC %04x %04x %04x\n", cx, cy, cr);
     switch (mem[VDU_DMOD]) {
     case 0:
       display.drawCircle(cx, cy, cr, currentColor);
@@ -176,7 +203,7 @@ void setVDU(uint8_t vCmd) {
     ex = (((uint16_t)mem[VDU_WH] * 256) + mem[VDU_WL]) % WIDTH;
     ey = (((uint16_t)mem[VDU_HH] * 256) + mem[VDU_HL]) % WIDTH;
 
-//    Serial.printf("TRI %04x %04x %04x %04x\n", cx, cy, ex, ey);
+    //    Serial.printf("TRI %04x %04x %04x %04x\n", cx, cy, ex, ey);
     switch (mem[VDU_DMOD]) {
     case 0:
       display.drawTriangle(display.getCursorX(), display.getCursorY(), cx, cy, ex, ey, currentColor);
@@ -204,7 +231,7 @@ void setVDU(uint8_t vCmd) {
       break;
     }
 
-    autoUpdate = ! (mem[VDU_MOD] >> 7);
+    autoUpdate = !(mem[VDU_MOD] >> 7);
     autoScroll = !((mem[VDU_MOD] >> 1) & 0x01);
     break;
 
@@ -215,6 +242,21 @@ void setVDU(uint8_t vCmd) {
   case CMD_SANE:
     resetDisplay();
     break;
+
+  case CMD_SPRITE:
+    initSprite();
+    break;
+
+  case CMD_SDRAW:
+    drawSprite();
+    break;
+
+  case CMD_SMOVE:
+    moveSprite();
+    break;
+
+  case CMD_COLL:
+    collSprite();
   }
 }
 
@@ -236,7 +278,7 @@ void scanVDU() {
 /// <param name="c"></param>
 /// <returns></returns>
 inline __attribute__((always_inline))
-void displayWrite(uint8_t c) {
+void displayWrite(const uint8_t c) {
   int16_t cursor_x, cursor_y;
 
   cursor_x = display.getCursorX();
@@ -340,7 +382,7 @@ void resetDisplay() {
   display.setColor(6, 0xF8F9);   // Magenta
 #endif
   display.setColor(255, 0xFFFF); // Last palette entry = White
-  Serial.println("Default palette loaded");
+//  Serial.println("Default palette loaded");
 
   // Clear back framebuffer
   display.fillScreen(0);
@@ -377,17 +419,27 @@ void helloDisplay() {
   // and we have lift off
   setColor(12); // BLUE
 #if 1
-  display.println("      N   N           666  5555   000   22");
-  display.println("      N   N          6     5     0   0 2  2");
-  display.println("      NN  N          6     5     0   0    2");
-  display.println("      N N N EEE  OO  6666  5555  0   0  22");
-  display.println("      N  NN E   O  O 6   6     5 0   0 2");
-  display.println("      N   N EE  O  O 6   6     5 0   0 2");
+  display.println("      N   N           666  5555   000   222");
+  display.println("      N   N          6     5     0   0 2   2");
+  display.println("      NN  N          6     5     0   0     2");
+  display.println("      N N N EEE  OO  6666  5555  0   0    2");
+  display.println("      N  NN E   O  O 6   6     5 0   0   2");
+  display.println("      N   N EE  O  O 6   6     5 0   0  2");
   display.println("      N   N E   O  O 6   6 5   5 0   0 2");
-  display.println("      N   N EEE  OO   666   555   000  2222");
+  display.println("      N   N EEE  OO   666   555   000  22222");
+#endif
+#if 0
+  display.println("nn    nn  eeeee   ooo     666   55555    00    222");
+  display.println("nn n  nn eeeeee  ooooo   66 66  55      0000  22222");
+  display.println("nn nn nn        ooo ooo 66      5555   00  00    222");
+  display.println("nn nn nn eeeeee oo   oo 6 666   55555  00  00    22");
+  display.println("nn nn nn eeeeee oo   oo 66   66     55 00  00   22");
+  display.println("nn nn nn        ooo ooo 66   66     55 00  00  22");
+  display.println("nn  n nn eeeeee  ooooo   66666  55555   0000  222222");
+  display.println("nn    nn  eeeee   ooo     666    555     00  2222222");
 #endif
 //  display.print("NEO6502");
   setColor(255); // WHITE
-  display.println("\n             memulator v0.04ehbp1");
+  display.println("\n            memulator v0.04ehbp2");
   setColor(DEFAULT_TEXT_COLOR); // GREEN
 }

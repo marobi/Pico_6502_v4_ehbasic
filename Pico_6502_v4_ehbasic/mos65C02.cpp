@@ -37,7 +37,7 @@ uint8_t   dataDir = 2;
 /// </summary>
 /// <param name="enable"></param>
 inline __attribute__((always_inline))
-void setClock(boolean clock) {
+void setClock(const boolean clock) {
   gpio_put(uP_CLOCK, clock);
 }
 
@@ -46,7 +46,7 @@ void setClock(boolean clock) {
 /// </summary>
 /// <param name="enable"></param>
 inline __attribute__((always_inline))
-void setReset(boolean reset) {
+void setReset(const boolean reset) {
   gpio_put(uP_RESET, reset);
 }
 
@@ -55,7 +55,7 @@ void setReset(boolean reset) {
 /// </summary>
 /// <param name="enable"></param>
 inline __attribute__((always_inline))
-void setEnable(uint32_t enable) {
+void setEnable(const uint32_t enable) {
   gpio_put_masked(en_MASK, enable);
 }
 
@@ -64,7 +64,7 @@ void setEnable(uint32_t enable) {
 /// </summary>
 /// <param name="direction"></param>
 inline __attribute__((always_inline))
-void setDir(uint8_t direction) {
+void setDir(const uint8_t direction) {
   if (direction != dataDir) {
     switch (direction) {
     case OUTPUT:  gpio_set_dir_masked(BUS_MASK, BUS_MASK);
@@ -129,7 +129,7 @@ uint8_t getData() {
 /// </summary>
 /// <param name="data"></param>
 inline __attribute__((always_inline))
-void putData(uint8_t data) {
+void putData(const uint8_t data) {
 
   setDir(OUTPUT);
   setEnable(en_D0_7);
@@ -176,7 +176,7 @@ void reset6502() {
 /// clock cycle 65C02
 /// </summary>
 //inline __attribute__((always_inline))
-void tick6502(uint32_t delay)
+void tick6502()
 {
     setEnable(en_NONE); // all high
 

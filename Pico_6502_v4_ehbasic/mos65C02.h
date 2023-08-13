@@ -11,7 +11,7 @@
 
 void init6502();
 void reset6502();
-void tick6502(uint32_t);
+void tick6502();
 
 #endif
 

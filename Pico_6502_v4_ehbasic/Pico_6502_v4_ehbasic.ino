@@ -33,7 +33,7 @@ void setup() {
   //  while (!Serial);
 
   sleep_ms(2500);
-  Serial.println("NEO6502 memulator v0.04ehbp1");
+  Serial.println("NEO6502 memulator v0.04ehbp2");
 
   Serial.printf("Starting ...\n");
 
@@ -85,8 +85,15 @@ void serialEvent1()
     case 0x04: // ^D
       Serial.read();
       Serial.print("VDU: ");
-      for (uint8_t i = 0; i < 16; i++) {
+      for (uint8_t i = 0; i < 17; i++) {
         Serial.printf("%02X ", mem[0XD020 + i]);
+      }
+      Serial.println("\nBUF:");
+      for (uint8_t i = 0; i < 16; i++) {
+        for (uint8_t j = 0; j < 16; j++) {
+          Serial.printf("%02X ", mem[0XD100 + i*16 + j]);
+        }
+        Serial.println();
       }
       Serial.println();
       break;
@@ -122,8 +129,11 @@ void serialEvent1()
 void loop() {
   static uint32_t i, j, f = 1;
 
+  //forever
   for (;;) {
-    tick6502(0UL);
+//    delay(100);
+
+    tick6502();
     clockCount++;
 
     if (j-- == 0) {
@@ -132,7 +142,7 @@ void loop() {
       scanChar();
       scanVDU();
 
-      j = 750;
+      j = 750UL;
     }
 
     if (autoUpdate) {
@@ -142,7 +152,7 @@ void loop() {
           frameClockTS = millis();
         }
 
-        f = 7500;
+        f = 7500UL;
       }
     }
 
@@ -156,7 +166,7 @@ void loop() {
           lastClockTS = millis();
         }
 
-        i = 20000;
+        i = 20000UL;
       }
     }
   }
