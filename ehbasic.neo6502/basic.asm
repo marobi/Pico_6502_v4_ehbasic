@@ -67,7 +67,7 @@ C64	=$C64
 .define VERSION	"2.22p5a"
 BREAK    =$03		; Code of keypress to interrupt program
 MEMBOT   =$0300		; Bottom of user memory
-MEMTOP   =$8000		; Top of user memory --NEO6502
+MEMTOP   =$A000		; Top of user memory --NEO6502
 ZPSTART  =$00		; Start of zero page workspace
 ZPWARM   =$00		; WARM start at &0000
 ZPEND    =$FF		; End of zero page workspace
@@ -403,16 +403,23 @@ TK_COLOR	= TK_PIXEL+1	; COLOR token
 TK_PALETTE	= TK_COLOR+1	; PALETTE token
 TK_VDU      = TK_PALETTE+1	; VDU token
 TK_REFRESH  = TK_VDU+1 ; VDU refresh token
-TK_RECT     = TK_REFRESH+1
+TK_RECT     = TK_REFRESH+1 
 TK_CIRCLE   = TK_RECT+1
 TK_TRIANGLE = TK_CIRCLE+1
 TK_PLAY     = TK_TRIANGLE+1
 TK_SILENCE  = TK_PLAY+1
 TK_SANE     = TK_SILENCE+1
+TK_SPRITE   = TK_SANE+1
+TK_SDRAW    = TK_SPRITE+1
+TK_SCLEAR   = TK_SDRAW+1
+TK_SMOVE    = TK_SCLEAR+1
+TK_SDIM     = TK_SMOVE+1
+TK_WDIM     = TK_SDIM+1
+TK_CSPRITE  = TK_WDIM+1
 
 ; secondary command tokens, can't start a statement
 
-TK_TAB		= TK_SANE+1	; TAB token
+TK_TAB		= TK_CSPRITE+1 ; TAB token
 TK_ELSE		= TK_TAB+1	; ELSE token
 TK_TO		= TK_ELSE+1	; TO token
 TK_FN		= TK_TO+1	; FN token
@@ -477,6 +484,7 @@ TK_VPTR		= TK_TWOPI+1	; VARPTR token
 TK_LEFTS	= TK_VPTR+1	; LEFT$ token
 TK_RIGHTS	= TK_LEFTS+1	; RIGHT$ token
 TK_MIDS		= TK_RIGHTS+1	; MID$ token
+TK_COLLISION= TK_MIDS+1    ; COLLISION token
 
 ; offsets from a base of X or Y
 
@@ -1124,6 +1132,18 @@ LAB_13AC
 	LDA	Ibuffs,X	; get byte from input buffer
 	BEQ	LAB_13EC	; if null save byte then exit
 
+; *** begin patch: lower case token recognition ***
+; ***              WARNING! changes documented behavior!
+; *** add
+      CMP   #'{'              ; convert lower to upper case
+      BCS   LAB_13EC          ; is above lower case
+      CMP   #'a'
+      BCC   PATCH_LC          ; is below lower case
+      AND   #$DF              ; mask lower case bit
+      
+PATCH_LC
+; *** end
+
 	CMP	#'_'		; compare with "_"
 	BCS	LAB_13EC	; if >= is lower case, save byte then continue crunching
 
@@ -1163,7 +1183,8 @@ LAB_13D0
 	CMP	(ut2_pl),Y	; compare with keyword first character table byte
 	BEQ	LAB_13D1	; go do word_table_chr if match
 
-	BCC	LAB_13EA	; if < keyword first character table byte go restore
+;	BCC	LAB_13EA	; if < keyword first character table byte go restore
+	BCC	PATCH_LC2	; if < keyword first character table byte go restore
 				; Y and save to crunched
 
 	INY			; else increment pointer
@@ -1194,6 +1215,12 @@ LAB_13D8
 	CMP	Ibuffs,X	; compare with byte from input buffer
 	BEQ	LAB_13D6	; go compare next if match
 
+; *** add
+      ORA #$20                ; repeat with lower case
+      CMP Ibuffs,X            ; compare with byte from input buffer
+      BEQ LAB_13D6            ; go compare next if match
+; *** end
+
 	BNE	LAB_1417	; branch if >< (not found keyword)
 
 LAB_13EA
@@ -1220,7 +1247,9 @@ LAB_13FF
 	STA	Oquote		; save token-$3A (clear for ":", TK_DATA-$3A for DATA)
 LAB_1401
 	EOR	#TK_REM-$3A	; effectively subtract REM token offset
-	BNE	LAB_13AC	; If wasn't REM then go crunch rest of line
+    BEQ LAB_1405
+	JMP LAB_13AC
+;	BNE	LAB_13AC	; If wasn't REM then go crunch rest of line
 LAB_1405
 	STA	Asrch		; else was REM so set search for [EOL]
 
@@ -1254,6 +1283,10 @@ LAB_141B
 	LDA	(ut2_pl),Y	; get byte from keyword table
 	BNE	LAB_13D8	; go test next word if not zero byte (end of table)
 
+; *** add label
+PATCH_LC2
+; *** end
+; *** end   patch: lower case token recognition ***
 				; reached end of table with no match
 	LDA	Ibuffs,X	; restore byte from input buffer
 	BPL	LAB_13EA	; branch always (all bytes in buffer are $00-$7F)
@@ -8304,6 +8337,13 @@ LAB_CTBL
 	.word	LAB_PLAY-1
 	.word	LAB_SILENCE-1
 	.word   LAB_SANE-1
+	.word	LAB_SPRITE-1
+	.word	LAB_SDRAW-1
+	.word	LAB_SCLEAR-1
+	.word	LAB_SMOVE-1
+	.word	LAB_SDIM-1
+	.word   LAB_WDIM-1
+	.word	LAB_CSPRITE-1
 
 ; function preprocess routine table
 
@@ -8344,6 +8384,7 @@ LAB_FTPM	= LAB_FTPL+$01
 	.word	LAB_LRMS-1	; LEFT$()	process string expression
 	.word	LAB_LRMS-1	; RIGHT$()		"
 	.word	LAB_LRMS-1	; MID$()		"
+	.word	LAB_PPFN-1	; COLLISION()	none
 
 ; action addresses for functions
 
@@ -8384,6 +8425,7 @@ LAB_FTBM	= LAB_FTBL+$01
 	.word	LAB_LEFT-1	; LEFT$()
 	.word	LAB_RIGHT-1	; RIGHT$()
 	.word	LAB_MIDS-1	; MID$()
+	.word	LAB_COLLISION-1 ; COLLISION()
 
 ; hierarchy and action addresses for operator
 
@@ -8492,32 +8534,32 @@ TAB_CHRT
 ; end marker (#$00)
 
 TAB_STAR
-	.byte TK_MUL,$00		; *
+	.byte TK_MUL,$00			; *
 TAB_PLUS
-	.byte TK_PLUS,$00		; +
+	.byte TK_PLUS,$00			; +
 TAB_MNUS
-	.byte TK_MINUS,$00		; -
+	.byte TK_MINUS,$00			; -
 TAB_SLAS
-	.byte TK_DIV,$00		; /
+	.byte TK_DIV,$00			; /
 TAB_LESS
 LBB_LSHIFT
 	.byte	"<",TK_LSHIFT		; <<	note - "<<" must come before "<"
-	.byte TK_LT			; <
+	.byte TK_LT					; <
 	.byte	$00
 TAB_EQUL
-	.byte TK_EQUAL,$00		; =
+	.byte TK_EQUAL,$00			; =
 TAB_MORE
 LBB_RSHIFT
 	.byte	">",TK_RSHIFT		; >>	note - ">>" must come before ">"
-	.byte TK_GT			; >
+	.byte TK_GT					; >
 	.byte	$00
 TAB_QEST
-	.byte TK_PRINT,$00		; ?
+	.byte TK_PRINT,$00			; ?
 TAB_ASCA
 LBB_ABS
 	.byte	"BS(",TK_ABS		; ABS(
 LBB_AND
-	.byte	"ND",TK_AND		; AND
+	.byte	"ND",TK_AND			; AND
 LBB_ASC
 	.byte	"SC(",TK_ASC		; ASC(
 LBB_ATN
@@ -8531,8 +8573,7 @@ LBB_BITCLR
 LBB_BITSET
 	.byte	"ITSET",TK_BITSET	; BITSET
 LBB_BITTST
-	.byte	"ITTST(",TK_BITTST
-					; BITTST(
+	.byte	"ITTST(",TK_BITTST	; BITTST(
 	.byte	$00
 TAB_ASCC
 LBB_CALL
@@ -8545,52 +8586,56 @@ LBB_CLEAR
 	.byte	"LEAR",TK_CLEAR		; CLEAR
 LBB_VCLS
 	.byte	"LS",TK_CLS			; CLS
+LBB_VCOLLISION
+	.byte	"OLLISION(",TK_COLLISION	; COLLISION
 LBB_VCOLOR
 	.byte	"OLOR",TK_COLOR		; COLOR
 LBB_CONT
 	.byte	"ONT",TK_CONT		; CONT
 LBB_COS
 	.byte	"OS(",TK_COS		; COS(
+LBB_VCSPRITE
+	.byte	"SPRITE",TK_CSPRITE	; CSPRITE
 	.byte	$00
 TAB_ASCD
 LBB_DATA
 	.byte	"ATA",TK_DATA		; DATA
 LBB_DEC
-	.byte	"EC",TK_DEC		; DEC
+	.byte	"EC",TK_DEC			; DEC
 LBB_DEEK
 	.byte	"EEK(",TK_DEEK		; DEEK(
 LBB_DEF
-	.byte	"EF",TK_DEF		; DEF
+	.byte	"EF",TK_DEF			; DEF
 LBB_DIM
-	.byte	"IM",TK_DIM		; DIM
+	.byte	"IM",TK_DIM			; DIM
 LBB_DOKE
 	.byte	"OKE",TK_DOKE		; DOKE note - "DOKE" must come before "DO"
 LBB_DO
-	.byte	"O",TK_DO		; DO
+	.byte	"O",TK_DO			; DO
 LBB_VDRAW
-	.byte	"RAW",TK_DRAW	; DRAW
+	.byte	"RAW",TK_DRAW		; DRAW
 	.byte	$00
 TAB_ASCE
 LBB_ELSE
 	.byte	"LSE",TK_ELSE		; ELSE
 LBB_END
-	.byte	"ND",TK_END		; END
+	.byte	"ND",TK_END			; END
 LBB_EOR
-	.byte	"OR",TK_EOR		; EOR
+	.byte	"OR",TK_EOR			; EOR
 LBB_EXP
 	.byte	"XP(",TK_EXP		; EXP(
 	.byte	$00
 TAB_ASCF
 LBB_FN
-	.byte	"N",TK_FN		; FN
+	.byte	"N",TK_FN			; FN
 LBB_FOR
-	.byte	"OR",TK_FOR		; FOR
+	.byte	"OR",TK_FOR			; FOR
 LBB_FRE
 	.byte	"RE(",TK_FRE		; FRE(
 	.byte	$00
 TAB_ASCG
 LBB_GET
-	.byte	"ET",TK_GET		; GET
+	.byte	"ET",TK_GET			; GET
 LBB_GOSUB
 	.byte	"OSUB",TK_GOSUB		; GOSUB
 LBB_GOTO
@@ -8602,15 +8647,15 @@ LBB_HEXS
 	.byte	$00
 TAB_ASCI
 LBB_IF
-	.byte	"F",TK_IF		; IF
+	.byte	"F",TK_IF			; IF
 LBB_INC
-	.byte	"NC",TK_INC		; INC
+	.byte	"NC",TK_INC			; INC
 LBB_INPUT
 	.byte	"NPUT",TK_INPUT		; INPUT
 LBB_INT
 	.byte	"NT(",TK_INT		; INT(
 LBB_IRQ
-	.byte	"RQ",TK_IRQ		; IRQ
+	.byte	"RQ",TK_IRQ			; IRQ
 	.byte	$00
 TAB_ASCL
 LBB_LCASES
@@ -8643,23 +8688,23 @@ LBB_VMOVE
 	.byte	$00
 TAB_ASCN
 LBB_NEW
-	.byte	"EW",TK_NEW		; NEW
+	.byte	"EW",TK_NEW			; NEW
 LBB_NEXT
 	.byte	"EXT",TK_NEXT		; NEXT
 LBB_NMI
-	.byte	"MI",TK_NMI		; NMI
+	.byte	"MI",TK_NMI			; NMI
 LBB_NOT
-	.byte	"OT",TK_NOT		; NOT
+	.byte	"OT",TK_NOT			; NOT
 LBB_NULL
 	.byte	"ULL",TK_NULL		; NULL
 	.byte	$00
 TAB_ASCO
 LBB_OFF
-	.byte	"FF",TK_OFF		; OFF
+	.byte	"FF",TK_OFF			; OFF
 LBB_ON
-	.byte	"N",TK_ON		; ON
+	.byte	"N",TK_ON			; ON
 LBB_OR
-	.byte	"R",TK_OR		; OR
+	.byte	"R",TK_OR			; OR
 	.byte	$00
 TAB_ASCP
 LBB_VPALETTE
@@ -8685,9 +8730,9 @@ LBB_READ
 LBB_VRECT
 	.byte	"ECT",TK_RECT		; RECT
 LBB_VREFRESH
-	.byte	"EFRESH",TK_REFRESH		; REFRESH
+	.byte	"EFRESH",TK_REFRESH	; REFRESH
 LBB_REM
-	.byte	"EM",TK_REM		; REM
+	.byte	"EM",TK_REM			; REM
 LBB_RESTORE
 	.byte	"ESTORE",TK_RESTORE
 					; RESTORE
@@ -8703,7 +8748,7 @@ LBB_RIGHTS
 LBB_RND
 	.byte	"ND(",TK_RND		; RND(
 LBB_RUN
-	.byte	"UN",TK_RUN		; RUN
+	.byte	"UN",TK_RUN			; RUN
 	.byte	$00
 TAB_ASCS
 LBB_SADD
@@ -8720,6 +8765,16 @@ LBB_SIN
 	.byte	"IN(",TK_SIN		; SIN(
 LBB_SPC
 	.byte	"PC(",TK_SPC		; SPC(
+LBB_VSCLEAR
+	.byte	"CLEAR",TK_SCLEAR	; SCLEAR
+LBB_VSDIM
+	.byte	"DIM",TK_SDIM		; SDIM
+LBB_VSDRAW
+	.byte	"DRAW",TK_SDRAW		; SDRAW
+LBB_VSMOVE
+	.byte	"MOVE",TK_SMOVE		; SMOVE
+LBB_VSPRITE
+	.byte	"PRITE",TK_SPRITE	; SPRITE
 LBB_SQR
 	.byte	"QR(",TK_SQR		; SQR(
 LBB_STEP
@@ -8765,6 +8820,8 @@ LBB_VVDU
 TAB_ASCW
 LBB_WAIT
 	.byte	"AIT",TK_WAIT		; WAIT
+LBB_VWDIM
+	.byte	"DIM",TK_WDIM		; WDIM
 LBB_WHILE
 	.byte	"HILE",TK_WHILE		; WHILE
 LBB_WIDTH
@@ -8882,7 +8939,7 @@ LAB_KEYT
 	.byte	3,'V'
 	.word	LBB_VVDU  	 ; VDU
 	.byte	7,'R'
-	.word	LBB_VREFRESH  	 ; RERESH
+	.word	LBB_VREFRESH ; RERESH
 	.byte	4,'R'
 	.word	LBB_VRECT	; RECT
 	.byte	6,'C'
@@ -8895,6 +8952,20 @@ LAB_KEYT
 	.word	LBB_SILENCE	; SILENCE
 	.byte   4,'S'
 	.word	LBB_VSANE	; SANE
+	.byte	6,'S'
+	.word	LBB_VSPRITE	; SPRITE
+	.byte	5,'S'
+	.word	LBB_VSDRAW	; SDRAW
+	.byte	5,'S'
+	.word	LBB_VSCLEAR	; SCLEAR
+	.byte	5,'S'
+	.word	LBB_VSMOVE	; SMOVE
+	.byte	4,'S'
+	.word	LBB_VSDIM	; SDIM
+	.byte	4,'S'
+	.word	LBB_VWDIM	; WDIM
+	.byte	7,'C'
+	.word	LBB_VCSPRITE ; CSPRITE
 
 ; secondary commands (can't start a statement)
 
@@ -9022,6 +9093,8 @@ LAB_KEYT
 	.word	LBB_RIGHTS	; RIGHT$
 	.byte	5,'M'		;
 	.word	LBB_MIDS	; MID$
+	.byte	10,'C'
+	.word	LBB_VCOLLISION	; COLLISION
 
 ; BASIC messages, mostly error messages
 

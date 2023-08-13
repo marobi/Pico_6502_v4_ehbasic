@@ -35,6 +35,7 @@ IR_mask		= IO_PAGE+$e	; interrupt enable mask
 ; reset vector points here
 RES_vec
 	CLD				; clear decimal mode
+	CLI
 	LDX	#$FF		; empty stack
 	TXS				; set the stack
 	
