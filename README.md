@@ -11,11 +11,11 @@ on the 'console' you can use:
 
 ^L : toggle statistics output, currently the clock-speed is shown.
 
-^D : dumps the 16 VDU registers.
+^D : dumps the 17 VDU registers and Sprite buffer.
 
 ^T : toggle trace of the input chars
 
-The basic version has many extra commands to interact with the VDU/SOUND interface. See the docs
+The basic version has many extra commands to interact with the VDU/SPRITE/SOUND interface. See the docs
 Also have a look at the demo basic-programs.
 However no LOAD/SAVE available (yet)
 
