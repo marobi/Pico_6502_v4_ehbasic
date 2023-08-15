@@ -25,8 +25,6 @@ That's all
 
 BTW no real USB-keyboard yet. You need to use a terminal emulator on your system, like PuTTY, TeraTerm or something and ... you need to connect to the USB-A connector. No connection to the USB-C connector is required. The NEO6502 will be powered through the USB-A connector.
 
-I added a default 256 color palette according to these definitions: https://www.ditig.com/256-colors-cheat-sheet
-
-Breaking news:
+- I added a default 256 color palette according to these definitions: https://www.ditig.com/256-colors-cheat-sheet
 - Ehbasic allows for Mixed case programming.
 - A simple sprite engine has been added
