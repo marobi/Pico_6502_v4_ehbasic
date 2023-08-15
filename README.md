@@ -1,7 +1,7 @@
 # Pico_6502_v4_ehbasic
 
 this version is of the NEO6502 memulator supporting a 320x240 256 color display, dual buffered.
-It will boot into Ehanced basic. You do not need to answer the Memory size question
+It will boot into Enhanced basic. You do not need to answer the Memory size question
 
 In order to have the board work correctly, connect UEXT.3 to 6502BUS.40
 
