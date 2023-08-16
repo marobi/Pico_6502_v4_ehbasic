@@ -1,7 +1,7 @@
 # Pico_6502_v4_ehbasic
 
 this version is of the NEO6502 memulator supporting a 320x240 256 color display, dual buffered.
-It will boot into Ehanced basic. You do not need to answer the Memory size question
+It will boot into Enhanced basic. You do not need to answer the Memory size question
 
 In order to have the board work correctly, connect UEXT.3 to 6502BUS.40
 
@@ -11,11 +11,11 @@ on the 'console' you can use:
 
 ^L : toggle statistics output, currently the clock-speed is shown.
 
-^D : dumps the 16 VDU registers.
+^D : dumps the 17 VDU registers and Sprite buffer.
 
 ^T : toggle trace of the input chars
 
-The basic version has many extra commands to interact with the VDU/SOUND interface. See the docs
+The basic version has many extra commands to interact with the VDU/SPRITE/SOUND interface. See the docs
 Also have a look at the demo basic-programs.
 However no LOAD/SAVE available (yet)
 
@@ -25,5 +25,6 @@ That's all
 
 BTW no real USB-keyboard yet. You need to use a terminal emulator on your system, like PuTTY, TeraTerm or something and ... you need to connect to the USB-A connector. No connection to the USB-C connector is required. The NEO6502 will be powered through the USB-A connector.
 
-Breaking news:
-I added a default 256 color palette according to these definitions: https://www.ditig.com/256-colors-cheat-sheet
+- I added a default 256 color palette according to these definitions: https://www.ditig.com/256-colors-cheat-sheet
+- Ehbasic allows for Mixed case programming.
+- A simple sprite engine has been added
