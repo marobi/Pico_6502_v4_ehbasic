@@ -416,10 +416,12 @@ TK_SMOVE    = TK_SCLEAR+1
 TK_SDIM     = TK_SMOVE+1
 TK_WDIM     = TK_SDIM+1
 TK_CSPRITE  = TK_WDIM+1
+TK_TILE     = TK_CSPRITE+1
+TK_TDIM     = TK_TILE+1
 
 ; secondary command tokens, can't start a statement
 
-TK_TAB		= TK_CSPRITE+1 ; TAB token
+TK_TAB		= TK_TDIM+1 ; TAB token
 TK_ELSE		= TK_TAB+1	; ELSE token
 TK_TO		= TK_ELSE+1	; TO token
 TK_FN		= TK_TO+1	; FN token
@@ -8344,6 +8346,8 @@ LAB_CTBL
 	.word	LAB_SDIM-1
 	.word   LAB_WDIM-1
 	.word	LAB_CSPRITE-1
+	.word   LAB_VTILE-1
+	.word	LAB_VTDIM-1
 
 ; function preprocess routine table
 
@@ -8791,8 +8795,12 @@ LBB_TAB
 	.byte	"AB(",TK_TAB		; TAB(
 LBB_TAN
 	.byte	"AN(",TK_TAN		; TAN(
+LBB_VTDIM
+	.byte	"DIM",TK_TDIM		; TDIM
 LBB_THEN
 	.byte	"HEN",TK_THEN		; THEN
+LBB_VTILE
+	.byte	"ILE",TK_TILE		; TILE	
 LBB_TO
 	.byte	"O",TK_TO			; TO
 LBB_VTRIANGLE
@@ -8966,6 +8974,10 @@ LAB_KEYT
 	.word	LBB_VWDIM	; WDIM
 	.byte	7,'C'
 	.word	LBB_VCSPRITE ; CSPRITE
+	.byte	4,'T'
+	.word	LBB_VTILE	; TILE
+	.byte	4,'T'
+	.word	LBB_VTDIM	; TDIM
 
 ; secondary commands (can't start a statement)
 

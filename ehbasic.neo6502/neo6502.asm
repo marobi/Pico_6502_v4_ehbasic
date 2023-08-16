@@ -12,16 +12,20 @@ VDU_HL  = $D027  ; Height low
 VDU_HH  = $D028  ; Height high
 VDU_FP  = $D029  ; Flip Sprite drawing :: 0 - NONE, 1 - HORZ, 2 - VERT, currently not supported
 VDU_SID = $D02A  ; Sprite Id
-VDU_DMOD= $D02B	 ; draw mode :: 0 - NOP, 1 - OR, 2 - AND, 3 - XOR, currently allway XOR
+VDU_DMOD= $D02B	 ; draw mode :: 0 - NORM, 1 - OR, 2 - AND, 3 - XOR, currently allways XOR
 VDU_MOD = $D02C  ; VDU mode
 VDU_PAL = $D02D  ; PAL index
 VDU_COL = $D02E  ; FG color low
 VDU_BCOL= $D02F  ; FG color high/BG color
 
 VDU_RET = $D030  ; return value
+VDU_CNT = $D031	 ; tmp count register
  
 VDU_BUFFER = $D100; 256 bytes buffer for sprite definitions
 VDU_BUFEND = VDU_BUFFER+256
+
+VDU_TBUFFER = $D200; 256 bytes buffer for tile definitions
+VDU_TBUFEND = VDU_TBUFFER+256
 
 ;--------------------------------
 ; VDU engine
@@ -39,11 +43,14 @@ CMD_TRI    = $0B
 
 ; SPRITE engine
 CMD_SPRITE = $10
-CMD_CSPRITE= $11
+CMD_CSPRITE= $11	; TBI
 CMD_SDRAW  = $12
-CMD_SCLEAR = $13
+CMD_SCLEAR = $13	; TBI
 CMD_SMOVE  = $14
 CMD_COLL   = $15
+
+; TILE engine
+CMD_TILE   = $16
 
 CMD_SANE   = $FF
 
@@ -206,7 +213,7 @@ LAB_VREFRESH:
 	RTS
 
 ;---------------------------------------------------------
-LAB_SDIM:			; BYTE
+LAB_SDIM:			; SDIM
     JSR VDU_WAIT
 	JSR	VDU_GETARG
 ;	LDA Itempl		; Index
@@ -247,10 +254,10 @@ WDIM_NEXT:
 	JSR	VDU_GETARG
 	PLA
 	TAY				; Index
-	LDA Itempl
+	LDA Itemph		; switch byte order!
 	STA VDU_BUFFER, Y
 	INY
-	LDA Itemph
+	LDA Itempl
 	STA VDU_BUFFER, Y
 	INY
 	TYA
@@ -336,21 +343,79 @@ LAB_SCLEAR:
 	RTS
 	
 ;------------
+; kind of a cludge: how to do a function with more than 1 parameter?
+; for now we use COLOR command to check collision with color
 LAB_COLLISION:
 	JSR VDU_WAIT
 	JSR	LAB_F2FX	; convert floating-to-fixed
 	LDA Itempl
-	STA VDU_SID
+	STA VDU_SID		; th sprite id
 	LDA #CMD_COLL
 	STA VDU_CMD
+	LDA #$FF
+	STA VDU_CNT
 COLL_WAIT:
+	INC VDU_CNT
 	LDA VDU_RET
-	BEQ COLL_WAIT
-	AND #$7F
+	BEQ COLL_WAIT	; 8-bit will be set
+	AND #$7F		; strip it off
 	TAY
 	LDA #$00
-	STA VDU_RET
+	STA VDU_RET		; and clear it
 	JMP	LAB_1FD0	; convert Y to byte in FAC1 and return
+
+;---------------------------------------------------------
+;-----------
+LAB_VTDIM:			; TDIM equvalent to SDIM
+    JSR VDU_WAIT
+	JSR	VDU_GETARG
+;	LDA Itempl		; Index
+	ASL
+	ASL
+	ASL
+
+TDIM_NEXT:
+	PHA				; Save index
+	JSR	LAB_GBYT	; check next BASIC byte
+	CMP	#','		; is there more ?
+	BNE TDIM_DONE
+	JSR	LAB_1C01	; scan for ','
+	JSR	VDU_GETARG
+	PLA
+	TAY				; Index
+	LDA Itempl
+	STA VDU_TBUFFER, Y
+	INY
+	TYA
+    BNE TDIM_NEXT
+	LDX	#$0A		; overflow
+	JMP LAB_XERR	; WARM start
+	
+TDIM_DONE:
+	PLA				; dump index
+	RTS
+
+;----------------
+LAB_VTILE:
+	JSR VDU_WAIT
+	JSR VDU_GETARG
+	STA VDU_SID		; id
+	JSR	LAB_1C01	; scan for ','
+	JSR VDU_GETX	; x
+	JSR VDU_GETY	; y
+	JSR VDU_NEXTARG
+	STA VDU_COL		; color
+	LDA #$00
+	STA VDU_DMOD
+	JSR	LAB_GBYT	; check next BASIC byte
+	CMP	#','		; is there more ?
+	BNE TILE_DONE
+	JSR VDU_NEXTARG
+	STA	VDU_DMOD	; modifier
+TILE_DONE:
+	LDA #CMD_TILE
+	STA	VDU_CMD
+	RTS
 	
 ;---------------------------------------------------------
 SND_WAIT:
