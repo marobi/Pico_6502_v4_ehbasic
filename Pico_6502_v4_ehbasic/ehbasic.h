@@ -6,7 +6,7 @@
 #include "arduino.h"
 
 #define EHBASIC_START 0xA000
-#define EHBASIC_SIZE  0x2CC7
+#define EHBASIC_SIZE  0x2D3C
 
 extern const uint8_t vectors_bin[];
 

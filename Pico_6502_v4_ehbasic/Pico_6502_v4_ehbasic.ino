@@ -85,13 +85,22 @@ void serialEvent1()
     case 0x04: // ^D
       Serial.read();
       Serial.print("VDU: ");
-      for (uint8_t i = 0; i < 17; i++) {
+      for (uint8_t i = 0; i < 18; i++) {
         Serial.printf("%02X ", mem[0XD020 + i]);
       }
-      Serial.println("\nBUF:");
+      Serial.println("\n\SPRITE:");
       for (uint8_t i = 0; i < 16; i++) {
         for (uint8_t j = 0; j < 16; j++) {
           Serial.printf("%02X ", mem[0XD100 + i*16 + j]);
+        }
+        Serial.println();
+      }
+      Serial.println();
+
+      Serial.println("\n\TILE:");
+      for (uint8_t i = 0; i < 16; i++) {
+        for (uint8_t j = 0; j < 16; j++) {
+          Serial.printf("%02X ", mem[0XD200 + i * 16 + j]);
         }
         Serial.println();
       }

@@ -190,7 +190,7 @@ void tick6502()
     //------------------------------------------------------------------------------------
     setClock(CLOCK_HIGH);
 
-    DELAY_FACTOR_SHORT();
+//    DELAY_FACTOR_SHORT();
 
     address = getAddress();
 

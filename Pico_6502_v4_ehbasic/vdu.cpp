@@ -7,6 +7,7 @@
 #include "vdu.h"
 #include "palette.h"
 #include "sprite.h"
+#include "tile.h"
 
 boolean        statusCursor = true;
 uint8_t        currentColor;
@@ -57,6 +58,17 @@ uint8_t getPixel(const uint16_t x, const uint16_t y) {
 /// <param name="color"></param>
 void drawPixel(const uint16_t x, const uint16_t y, const uint16_t color) {
   display.drawPixel(x, y, color);
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="x"></param>
+/// <param name="y"></param>
+/// <param name="bm"></param>
+/// <param name="color"></param>
+void drawBitmap(const uint16_t x, const uint16_t y, const uint8_t* bm, const uint8_t color) {
+  display.drawBitmap(x, y, bm, 8, 8, color);
 }
 
 /// <summary>
@@ -113,6 +125,7 @@ inline __attribute__((always_inline))
 void clearDisplay() {
   display.fillScreen(0);
   display.setCursor(0, 0);
+
   hasDisplayUpdate++;
 }
 
@@ -257,6 +270,11 @@ void setVDU(const uint8_t vCmd) {
 
   case CMD_COLL:
     collSprite();
+    break;
+
+  case CMD_TILE:
+    drawTile();
+    break;
   }
 }
 
@@ -398,6 +416,10 @@ void resetDisplay() {
   autoUpdate = true;
   autoScroll = true;
   setColor(DEFAULT_TEXT_COLOR);
+
+  initSprites();
+  initTiles(); // no tiles defined
+
   clearDisplay();
 }
 

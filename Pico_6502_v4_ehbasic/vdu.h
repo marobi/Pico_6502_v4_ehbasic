@@ -54,7 +54,10 @@
 #define CMD_SDRAW  0x12   // Sprite DRAW
 #define CMD_SMOVE  0x14   // Srpite MOVE
 #define CMD_COLL   0x15   // Sprite COLLISION
-#define CMD_SANE  0xFF    // SANE
+
+#define CMD_TILE   0x16   // TILE
+
+#define CMD_SANE   0xFF    // SANE
 
 
 extern uint8_t currentColor;
@@ -62,6 +65,7 @@ extern boolean autoUpdate;
 extern uint32_t hasDisplayUpdate;
 extern boolean  traceOn;
 
+extern void drawBitmap(const uint16_t, const uint16_t, const uint8_t*, const uint8_t);
 extern uint8_t getPixel(const uint16_t, const uint16_t);
 extern void drawPixel(const uint16_t, const uint16_t, const uint16_t);
 

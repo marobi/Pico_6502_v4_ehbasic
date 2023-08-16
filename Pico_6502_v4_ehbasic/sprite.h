@@ -27,6 +27,7 @@ typedef struct _defsprite {
   } cache;
 } defSprite;
 
+void initSprites();
 
 void initSprite();
 void drawSprite();

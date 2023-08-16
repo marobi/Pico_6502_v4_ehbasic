@@ -52,10 +52,10 @@ bool _hitSprite(const uint16_t x0, const uint16_t y0, const uint64_t sprite, con
 
 // Move a sprite from x, y by one pixel in any direction by exclusive-ORing only the changed pixels with the display
 inline __attribute__((always_inline))
-void _moveSprite(const uint16_t x0, const uint16_t y0, const uint64_t sprite, int8_t dx, int8_t dy, const uint8_t color) {
+void _moveSprite(const uint16_t x0, const uint16_t y0, const uint64_t sprite, const int8_t dx, const int8_t dy, const uint8_t color) {
   uint8_t oldbit, newbit;
   if ((x0 >= 0) && (x0 + 7 < WIDTH) && (y0 >= 0) && (y0 + 7 < HEIGHT)) {
-    dx = (dx > 0) - (dx < 0); dy = (dy > 0) - (dy < 0);
+//    dx = (dx > 0) - (dx < 0); dy = (dy > 0) - (dy < 0);
     for (uint8_t y = 0; y < 10; y++) {
       for (uint8_t x = 0; x < 10; x++) {
         // Sprite's previous position
@@ -70,6 +70,7 @@ void _moveSprite(const uint16_t x0, const uint16_t y0, const uint64_t sprite, in
           newbit = sprite >> (63 - yn * 8 - xn) & 1;
         }
         else newbit = 0;
+
         if (oldbit != newbit) xorPixel(x0 - 1 + x, y0 - 1 + y, color);
       }
     }
@@ -209,4 +210,12 @@ void initSprite() {
     sprite->cache.b[i] = mem[SPRITE_BUFFER + sprite->buffer + (7-i)];
   }
 //  dumpSprite(id);
+}
+
+/// <summary>
+/// 
+/// </summary>
+void initSprites() {
+  for (uint16_t i = 0; i < 256; i++)
+    mem[SPRITE_BUFFER + i] = 0x00;
 }
